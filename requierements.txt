@@ -1,0 +1,5 @@
+tensorflow>=2.4.1
+matplotlib>=3.5.1
+tqdm>=4.64.0
+tensorboard>=2.9.0
+pyg>=2.0.4

@@ -7,15 +7,16 @@ from torch_geometric.nn import global_max_pool
 
 
 class SetAbstraction(torch.nn.Module):
-    def __init__(self, ratio, radius, c_in, mlp):
+    def __init__(self, ratio, radius, nsample, c_in, mlp):
         super().__init__()
         self.sampling_ratio = ratio
         self.radius = radius
+        self.nsample = nsample
         self.conv = PointConv(set_pointnet_layers(c_in, mlp), add_self_loops=False)
 
     def forward(self, h, pos, batch):
         idx = fps(pos, batch, ratio=self.sampling_ratio)
-        row, col = radius(x= pos, y= pos[idx], r= self.radius, batch_x=batch, batch_y=batch[idx], max_num_neighbors=32)
+        row, col = radius(x= pos, y= pos[idx], r= self.radius, batch_x=batch, batch_y=batch[idx], max_num_neighbors=self.nsample)
         edge_index = torch.stack([col, row], dim=0)
         #edge_index = knn(pos, pos[index], k=16, batch_x=batch, batch_y=batch[index])
         h_dst = None if h is None else h[idx]

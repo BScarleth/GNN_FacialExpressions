@@ -100,12 +100,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--batch-size',
         type=int,
-        default=16,
+        default=6,
         help='Batch size for training steps')
     parser.add_argument(
         '--learning-rate',
         type=float,
-        default=0.0001,
+        default=0.001,
         help='Learning rate for Adam optimizer')
     parser.add_argument(
         '--weight-decay',

@@ -9,14 +9,14 @@ def testing_model(dataloader, model, num_labels=12, device="cpu"):
     clr_labels = [str(i) for i in range(num_labels)]
 
     model.eval()
-    #model.to("cpu")
+    model.to("cpu")
     for batch in dataloader:
         batch.to(device)
         predictions = model(batch)
-        mientras = cambio(batch.y)
+        #mientras = cambio(batch.y)
 
-        #predictions.to("cpu")
-        total_labels.extend(mientras)  # batch.y.tolist() batch.y.tolist()
+        predictions.to("cpu")
+        total_labels.extend(batch.y.tolist())  # batch.y.tolist() batch.y.tolist()
 
         total_predictions.extend(torch.max(predictions, axis=1).indices.tolist())
     print(classification_report(total_labels, total_predictions, target_names=clr_labels))

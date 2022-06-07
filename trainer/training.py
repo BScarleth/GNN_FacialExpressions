@@ -38,19 +38,20 @@ class Trainer:
             for batch in dataloader:
                 batch.to(device)
                 predictions = model(batch)
-                mientras = self.cambio(batch.y)
+                #mientras = self.cambio(batch.y)
                 #print(mientras, " ", predictions)
 
                 #loss = F.nll_loss(predictions, mientras) #batch.y
-                loss = F.cross_entropy(predictions, mientras)
+                loss = F.cross_entropy(predictions, batch.y)
                 #print(loss)
                 epoch_loss += float(loss)
                 #del predictions
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
-                #del loss
-                #batch.to("cpu")
+                del loss
+                batch.to("cpu")
+                torch.cuda.empty_cache()
             epoch_acc, epoch_val_loss = self.evaluate(val_loader, model, writer, iter,device)
             self.set_metrics(epoch_loss, epoch_acc, epoch_val_loss, iter, start, dataloader, writer)
         writer.flush()
@@ -102,16 +103,17 @@ class Trainer:
             with torch.no_grad():
                 predictions = model(batch)
                 _, indices = torch.max(predictions, dim=1)
-            mientras = self.cambio(batch.y)
+            #mientras = self.cambio(batch.y)
             #print(indices, "---", mientras)
 
             #loss = F.nll_loss(predictions, mientras)  # batch.y
-            loss = F.cross_entropy(predictions, mientras)
+            loss = F.cross_entropy(predictions, batch.y)
             epoch_loss += float(loss)
 
-            #del loss
-            correct += torch.sum(indices ==  mientras) #batch.y #batch.y
-            #batch.to("cpu")
+            del loss
+            correct += torch.sum(indices == batch.y) #batch.y #batch.y
+            batch.to("cpu")
+            torch.cuda.empty_cache()
 
         return float(correct/len(dataloader.dataset)), float((epoch_loss / len(dataloader)))
 

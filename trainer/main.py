@@ -27,13 +27,13 @@ def train_predictor(args):
 
     dataset.shuffle()
 
-    d = []
-    test_data = [6, 7, 8, 9, 10, 11] # 9, 10, 11
-    for element in dataset:
-        if int(element.y) in test_data:
-            d.append(element)
-    dataset = d
-    random.shuffle(dataset)
+    #d = []
+    #test_data = [6, 7, 8, 9, 10, 11] # 9, 10, 11
+    #for element in dataset:
+    #    if int(element.y) in test_data:
+    #        d.append(element)
+    #dataset = d
+    #random.shuffle(dataset)
     #path = 'data/ModelNet10'
     #dataset = ModelNet(path, transform=SamplePoints(num=1024), pre_transform=T.NormalizeScale())
 
@@ -63,7 +63,7 @@ def train_predictor(args):
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True, drop_last=True)
     val_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True, drop_last=True)
 
-    model = PointNet(6)
+    model = PointNet(12)
     #model.to("cpu")
 
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, betas=(0.9, 0.999), eps=1e-08, weight_decay=args.weight_decay)
@@ -88,7 +88,7 @@ def train_predictor(args):
        path = "/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/trainer/trained_models/pointnet_model_20220528_101641"
        model.test(path, "cpu")
 
-    testing_model(test_loader, model, 6) #test_loader
+    testing_model(test_loader, model, 12) #test_loader
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--batch-size',
         type=int,
-        default=32,
+        default=16,
         help='Batch size for training steps')
     parser.add_argument(
         '--learning-rate',
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         args.device = torch.device('cuda:{}'.format(torch.cuda.current_device()))
     else:
         args.device = 'cpu'
-    args.device = 'cpu'
+    #args.device = 'cpu'
     train_predictor(args)
 
 

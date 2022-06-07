@@ -94,10 +94,10 @@ def reduce_dataset():
 
 def convert_dataset_sizes(dataset, num_elements):
     #Count number of elements in each class
-    #labels = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0}
-    #samples = {0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[], 9:[], 10:[], 11:[]}
-    labels = {6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0} # 9: 0, 10: 0, 11: 0
-    samples = {6: [], 7: [], 8: [], 9: [], 10: [], 11: []} # 9: [], 10: [], 11: []
+    labels = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0}
+    samples = {0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[], 9:[], 10:[], 11:[]}
+    #labels = {6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0} # 9: 0, 10: 0, 11: 0
+    #samples = {6: [], 7: [], 8: [], 9: [], 10: [], 11: []} # 9: [], 10: [], 11: []
 
     for d in dataset:
         labels[int(d.y)] += 1
@@ -115,7 +115,8 @@ def convert_dataset_sizes(dataset, num_elements):
             random_samples = random.sample(samples[lb], k=num_elements)
             new_dataset.extend(random_samples)
 
-    labels = {6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
+    #labels = {6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
+    labels = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
     for d in new_dataset:
         labels[int(d.y)] += 1
     print(labels)

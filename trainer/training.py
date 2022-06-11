@@ -31,6 +31,7 @@ class Trainer:
         start = time.time()
         writer = SummaryWriter()
 
+        print(next(model.parameters()).device)
         print("\nTraining started!")
         for iter in range(1, self.n_iters + 1):#tqdm(range(1, self.n_iters + 1), desc="Iterations..."):
             model.train()
@@ -38,8 +39,9 @@ class Trainer:
             for batch in dataloader:
                 batch.to(device)
                 predictions = model(batch)
+                _, indices = torch.max(predictions, dim=1)
                 #mientras = self.cambio(batch.y)
-                #print(mientras, " ", predictions)
+                print(batch.y, " ", indices)
 
                 #loss = F.nll_loss(predictions, mientras) #batch.y
                 loss = F.cross_entropy(predictions, batch.y)

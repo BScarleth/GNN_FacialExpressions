@@ -12,7 +12,7 @@ import os.path as osp
 from models.point_net import PointNet
 from trainer.training import Trainer
 from trainer.testing import testing_model
-from trainer.utils import showPlot, plot_original_face, plot_sequence, increase_dataset, convert_dataset_sizes
+from trainer.utils import showPlot, plot_original_face, plot_sequence, increase_dataset, convert_dataset_sizes, reduce_dataset
 import matplotlib.pyplot as plt
 import os
 import argparse
@@ -23,38 +23,12 @@ def train_predictor(args):
     #dataset = ModelNet(root='{}/../dataset_pruebas/'.format(cwd),transform=SamplePoints(num=1024))
     path = "/home/brenda/Documents/master/thesis/IAS_2020_Brenda_dataset/dataset/"
     #dataset = CoMA(root='{}/../dataset/'.format(cwd), pre_transform=T.NormalizeScale())
-    dataset = CoMA(root=path, pre_transform=T.NormalizeScale())
-
-    dataset.shuffle()
-
-    #d = []
-    #test_data = [6, 7, 8, 9, 10, 11] # 9, 10, 11
-    #for element in dataset:
-    #    if int(element.y) in test_data:
-    #        d.append(element)
-    #dataset = d
-    #random.shuffle(dataset)
-    #path = 'data/ModelNet10'
-    #dataset = ModelNet(path, transform=SamplePoints(num=1024), pre_transform=T.NormalizeScale())
+    train_dataset = CoMA(root=path, train=True ,pre_transform=T.NormalizeScale())
+    test_dataset = CoMA(root=path, train=False, pre_transform=T.NormalizeScale())
 
     print("dataset ready")
-    #dataset.transform = SamplePoints(1024)
-    #dataset.shuffle()
-    #[15, 80]
-    #dataset = increase_dataset(dataset)
-    #random.shuffle(new_dataset)
-    #print("No. of dataset elements:", len(new_dataset))
-    #plot_original_face(dataset, 7495)
-
-    #plot_sequence(dataset, 7445, 7485)#6215
-    #dataset.transform = SamplePoints(1024)
-
-    indx = int((len(dataset) * 80) / 100)
-    train_dataset = dataset[:indx]
-    test_dataset = dataset[indx:]
-
-    train_dataset = convert_dataset_sizes(train_dataset, 480)
-    test_dataset = convert_dataset_sizes(test_dataset, 30)
+    train_dataset = convert_dataset_sizes(train_dataset, 700)
+    test_dataset = convert_dataset_sizes(test_dataset, 206)
 
     print(len(train_dataset))
     print(len(test_dataset))
@@ -64,8 +38,6 @@ def train_predictor(args):
     val_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True, drop_last=True)
 
     model = PointNet(12)
-    #model.to("cpu")
-
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, betas=(0.9, 0.999), eps=1e-08, weight_decay=args.weight_decay)
     trainer = Trainer(args.n_iters, args.print_every, args.plot_every)
 
@@ -82,11 +54,9 @@ def train_predictor(args):
     
     if args.training:
        trainer.train_model(train_loader, val_loader, model, optimizer, args.device)
-       #showPlot(plot_losses)
-       #showPlot(plot_acc)
     else:
-       path = "/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/trainer/trained_models/pointnet_model_20220528_101641"
-       model.test(path, "cpu")
+       path = "/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/trainer/trained_models/pointnet_model_20220611_083824"
+       model.test(path)
 
     testing_model(test_loader, model, 12) #test_loader
 
@@ -95,12 +65,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--n-iters',
         type=int,
-        default=6,
+        default=2,
         help='Number of training steps')
     parser.add_argument(
         '--batch-size',
         type=int,
-        default=6,
+        default=8,
         help='Batch size for training steps')
     parser.add_argument(
         '--learning-rate',
@@ -120,7 +90,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--training',
         type=bool,
-        default=True,
+        default=False,
         help='Trained the model when True, test otherwise')
     parser.add_argument(
         '--plot-every',
@@ -130,13 +100,14 @@ if __name__ == '__main__':
 
     args, _ = parser.parse_known_args()
 
+    print(args)
+
     cuda_availability = torch.cuda.is_available()
     print("is cuda available?", cuda_availability)
     if cuda_availability:
         args.device = torch.device('cuda:{}'.format(torch.cuda.current_device()))
     else:
         args.device = 'cpu'
-    #args.device = 'cpu'
     train_predictor(args)
 
 

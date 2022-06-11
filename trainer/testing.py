@@ -7,25 +7,17 @@ def testing_model(dataloader, model, num_labels=12, device="cpu"):
     total_predictions = []
 
     clr_labels = [str(i) for i in range(num_labels)]
-
+    print(next(model.parameters()).device)
+    model.to("cuda")
     model.eval()
-    #model.to("cpu")
+    print(next(model.parameters()).device)
+
     for batch in dataloader:
         batch.to("cuda")
-        predictions = model(batch)
-        #mientras = cambio(batch.y)
-
-        #predictions.to("cpu")
-        total_labels.extend(batch.y.tolist())  # batch.y.tolist() batch.y.tolist()
-
-        total_predictions.extend(torch.max(predictions, axis=1).indices.tolist())
+        with torch.no_grad():
+            predictions = model(batch)
+            total_labels.extend(batch.y.tolist())
+            total_predictions.extend(torch.max(predictions, axis=1).indices.tolist())
+        batch.to("cpu")
+        torch.cuda.empty_cache()
     print(classification_report(total_labels, total_predictions, target_names=clr_labels))
-
-
-def cambio(lista):
-    labels = {6: 0, 7: 1, 8: 2, 9: 3, 10: 4, 11: 5}  # 9:3, 10:4, 11:5
-    lb = []
-    # print(lista)
-    for l in lista:
-        lb.append(labels[int(l)])
-    return torch.tensor(lb)#.to("cpu")

@@ -10,37 +10,75 @@ from torch_geometric.data import Dataset
 from torch_geometric.data import extract_zip
 from torch_geometric.io import read_ply
 
+
 class CoMA(Dataset):
     url = 'https://coma.is.tue.mpg.de/'
 
     categories = [
-        'bareteeth', #0
-        'cheeks_in', #1
-        'eyebrow', #2
-        'high_smile', #3
-        'lips_back', #4
-        'lips_up', #5
-        'mouth_down', #6
-        'mouth_extreme', #7
-        'mouth_middle', #8
-        'mouth_open', #9
-        'mouth_side', #10
-        'mouth_up', #11
+        'bareteeth',  # 0
+        'cheeks_in',  # 1
+        'eyebrow',  # 2
+        'high_smile',  # 3
+        'lips_back',  # 4
+        'lips_up',  # 5
+        'mouth_down',  # 6
+        'mouth_extreme',  # 7
+        'mouth_middle',  # 8
+        'mouth_open',  # 9
+        'mouth_side',  # 10
+        'mouth_up',  # 11
     ]
 
+    category_elements_testing = {
+        'bareteeth': 0,  # 0
+        'cheeks_in': 0,  # 1
+        'eyebrow': 0,  # 2
+        'high_smile': 0,  # 3
+        'lips_back': 0,  # 4
+        'lips_up': 0,  # 5
+        'mouth_down': 0,  # 6
+        'mouth_extreme': 0,  # 7
+        'mouth_middle': 0,  # 8
+        'mouth_open': 0,  # 9
+        'mouth_side': 0,  # 10
+        'mouth_up': 0,  # 11
+    }
+
+    category_elements_training = {
+        'bareteeth': 0,  # 0
+        'cheeks_in': 0,  # 1
+        'eyebrow': 0,  # 2
+        'high_smile': 0,  # 3
+        'lips_back': 0,  # 4
+        'lips_up': 0,  # 5
+        'mouth_down': 0,  # 6
+        'mouth_extreme': 0,  # 7
+        'mouth_middle': 0,  # 8
+        'mouth_open': 0,  # 9
+        'mouth_side': 0,  # 10
+        'mouth_up': 0,  # 11
+    }
+
     def __init__(self, root: str,
+                 train: bool = True,
                  transform: Optional[Callable] = None,
                  pre_transform: Optional[Callable] = None,
                  pre_filter: Optional[Callable] = None):
+        self.train = train
+        self.path = "train" if train else "test"
         super().__init__(root, transform, pre_transform, pre_filter)
 
     @property
     def raw_file_names(self) -> str:
-        return 'COMA_data.py'
+        return 'COMA_data.zip'
 
     @property
     def processed_file_names(self):
-        return ["data_{}.pt".format(str(i)) for i in range(10412)] #7725, 20465
+        if self.train:
+            return ["train_data_{}.pt".format(str(i)) for i in range(8290)] #7725, 20465 , 10412
+        else:
+            return ["test_data_{}.pt".format(str(i)) for i in range(2123)]  # 7725, 20465 , 10412
+
 
     def download(self):
         raise RuntimeError(
@@ -60,18 +98,20 @@ class CoMA(Dataset):
             extract_zip(self.raw_paths[0], self.raw_dir, log=False)
             folders = sorted(glob(osp.join(self.raw_dir, 'FaceTalk_*')))
 
-        indx = 0 #20465
+        indx_test = 0  # 20465
+        indx_train = 0
         indx_no_filter = -1
 
-
         dataset_indices = self.load_yaml()
-        for folder_idx, folder in tqdm(enumerate(folders), desc="Loading dataset..."): #tqdm(folders, desc="Loading dataset..."):
+        for folder_idx, folder in tqdm(enumerate(folders),
+                                       desc="Loading dataset..."):  # tqdm(folders, desc="Loading dataset..."):
             for i, category in enumerate(self.categories):
                 files = sorted(glob(osp.join(folder, category, '*.ply')))
 
                 if isinstance(dataset_indices[folder_idx][category.upper()][0], list) == False:
                     initial = dataset_indices[folder_idx][category.upper()][0]
                     final = dataset_indices[folder_idx][category.upper()][1]
+                    total_elements = (final - initial) + 1
                     double_index = False
                 else:
                     initial = dataset_indices[folder_idx][category.upper()][0][0]
@@ -81,6 +121,11 @@ class CoMA(Dataset):
                     final_der = dataset_indices[folder_idx][category.upper()][1][1]
                     double_index = True
 
+                    total_elements = (final - initial) + (final_der - initial_der) + 2
+
+                data_split_indx = int((total_elements * 80) / 100)
+
+                category_elements = 0
                 for j, f in enumerate(files):
                     indx_no_filter += 1
 
@@ -94,16 +139,7 @@ class CoMA(Dataset):
                         else:
                             continue
 
-                    #print(indx_no_filter)
-
-
-                    #if double_index:
-                    #    if indx_no_filter < initial or indx_no_filter > final:
-                    #        if indx_no_filter < initial_der or indx_no_filter > final_der:
-                    #            continue
-                    #else:
-                    #    if indx_no_filter < initial or indx_no_filter > final:
-                    #        continue
+                    category_elements += 1
 
                     data = read_ply(f)
                     data.y = torch.tensor([i], dtype=torch.long)
@@ -113,9 +149,19 @@ class CoMA(Dataset):
                     if self.pre_transform is not None:
                         data = self.pre_transform(data)
                     self.reduce_faces(data)
-                    torch.save(data, osp.join(self.processed_dir, f'data_{indx}.pt'))
-                    indx += 1
-        print("{} graphs have been processed!".format(indx))
+
+                    if category_elements <= data_split_indx:
+                        torch.save(data, osp.join(self.processed_dir + f'/train_data_{indx_train}.pt'))
+                        indx_train += 1
+                        self.category_elements_training[category] += 1
+                    else:
+                        torch.save(data, osp.join(self.processed_dir + f'/test_data_{indx_test}.pt'))
+                        indx_test += 1
+                        self.category_elements_testing[category] += 1
+                    # indx += 1#
+                #print("graphs have been processed!\n", self.category_elements_training, "\n", self.category_elements_testing)
+                #break
+        print("graphs have been processed!\n", self.category_elements_training, "\n", self.category_elements_testing)
 
     def reduce_faces(self, data):
         n1, n2, n3 = [], [], []
@@ -132,7 +178,8 @@ class CoMA(Dataset):
                 n1.append(new_indices[int(p1)])
                 n2.append(new_indices[int(p2)])
                 n3.append(new_indices[int(p2)])
-        data.face = torch.stack((torch.tensor(n1, dtype=torch.long), torch.tensor(n2, dtype=torch.long), torch.tensor(n3, dtype=torch.long)))
+        data.face = torch.stack((torch.tensor(n1, dtype=torch.long), torch.tensor(n2, dtype=torch.long),
+                                 torch.tensor(n3, dtype=torch.long)))
         data.pos = torch.stack(new_pos)
 
     def reduce_graph(self, data):
@@ -156,5 +203,5 @@ class CoMA(Dataset):
         return len(self.processed_file_names)
 
     def get(self, idx):
-        data = torch.load(osp.join(self.processed_dir, f'data_{idx}.pt'))
+        data = torch.load(osp.join(self.processed_dir, f'{self.path}_data_{idx}.pt'))
         return data

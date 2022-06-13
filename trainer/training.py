@@ -41,7 +41,7 @@ class Trainer:
                 predictions = model(batch)
                 _, indices = torch.max(predictions, dim=1)
                 #mientras = self.cambio(batch.y)
-                print(batch.y, " ", indices)
+                #print(batch.y, " ", indices)
 
                 #loss = F.nll_loss(predictions, mientras) #batch.y
                 loss = F.cross_entropy(predictions, batch.y)

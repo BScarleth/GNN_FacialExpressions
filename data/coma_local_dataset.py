@@ -70,7 +70,7 @@ class CoMA(Dataset):
 
     @property
     def raw_file_names(self) -> str:
-        return 'COMA_data.zip'
+        return 'COMA_data.py'
 
     @property
     def processed_file_names(self):

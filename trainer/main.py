@@ -25,6 +25,8 @@ def train_predictor(args):
     #dataset = CoMA(root='{}/../dataset/'.format(cwd), pre_transform=T.NormalizeScale())
     train_dataset = CoMA(root=path, train=True ,pre_transform=T.NormalizeScale())
     test_dataset = CoMA(root=path, train=False, pre_transform=T.NormalizeScale())
+    print(len(train_dataset))
+    print(len(test_dataset))
 
     print("dataset ready")
     train_dataset = convert_dataset_sizes(train_dataset, 700)
@@ -55,7 +57,7 @@ def train_predictor(args):
     if args.training:
        trainer.train_model(train_loader, val_loader, model, optimizer, args.device)
     else:
-       path = "/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/trainer/trained_models/pointnet_model_20220611_083824"
+       path = "/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/trainer/trained_models/pointnet_model_20220612_140844"
        model.test(path)
 
     testing_model(test_loader, model, 12) #test_loader
@@ -65,7 +67,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--n-iters',
         type=int,
-        default=2,
+        default=120,
         help='Number of training steps')
     parser.add_argument(
         '--batch-size',

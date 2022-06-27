@@ -75,9 +75,9 @@ class CoMA(Dataset):
     @property
     def processed_file_names(self):
         if self.train:
-            return ["train_data_{}.pt".format(str(i)) for i in range(8290)] #7725, 20465 , 10412
+            return ["train_data_{}.pt".format(str(i)) for i in range(8290)]
         else:
-            return ["test_data_{}.pt".format(str(i)) for i in range(2123)]  # 7725, 20465 , 10412
+            return ["test_data_{}.pt".format(str(i)) for i in range(2123)]
 
 
     def download(self):
@@ -86,7 +86,7 @@ class CoMA(Dataset):
             f"'{self.url}' and move it to '{self.raw_dir}'")
 
     def load_yaml(self):
-        with open('/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/data/dataset_definition.yaml', 'r') as file:
+        with open('dataset_definition.yaml', 'r') as file:
             try:
                 return yaml.safe_load(file)
             except yaml.YAMLError as exc:
@@ -98,13 +98,13 @@ class CoMA(Dataset):
             extract_zip(self.raw_paths[0], self.raw_dir, log=False)
             folders = sorted(glob(osp.join(self.raw_dir, 'FaceTalk_*')))
 
-        indx_test = 0  # 20465
+        indx_test = 0
         indx_train = 0
         indx_no_filter = -1
 
         dataset_indices = self.load_yaml()
         for folder_idx, folder in tqdm(enumerate(folders),
-                                       desc="Loading dataset..."):  # tqdm(folders, desc="Loading dataset..."):
+                                       desc="Loading dataset..."):
             for i, category in enumerate(self.categories):
                 files = sorted(glob(osp.join(folder, category, '*.ply')))
 
@@ -158,9 +158,6 @@ class CoMA(Dataset):
                         torch.save(data, osp.join(self.processed_dir + f'/test_data_{indx_test}.pt'))
                         indx_test += 1
                         self.category_elements_testing[category] += 1
-                    # indx += 1#
-                #print("graphs have been processed!\n", self.category_elements_training, "\n", self.category_elements_testing)
-                #break
         print("graphs have been processed!\n", self.category_elements_training, "\n", self.category_elements_testing)
 
     def reduce_faces(self, data):

@@ -1,73 +1,50 @@
 import torch
-#from torch_geometric.datasets import ModelNet
 from torch_geometric.loader import DataLoader
-from torch_geometric.transforms import SamplePoints
-import random
-from pytorch_model_summary import summary
-from data.modelnet_local_dataset import ModelNet
 from data.coma_local_dataset import CoMA
 import torch_geometric.transforms as T
-import os.path as osp
-
 from models.point_net import PointNet
 from trainer.training import Trainer
 from trainer.testing import testing_model
-from trainer.utils import showPlot, plot_original_face, plot_sequence, increase_dataset, convert_dataset_sizes, reduce_dataset
-import matplotlib.pyplot as plt
-import os
+from trainer.utils import convert_dataset_sizes
 import argparse
 
-def train_predictor(args):
 
-    cwd = os.getcwd()
-    #dataset = ModelNet(root='{}/../dataset_pruebas/'.format(cwd),transform=SamplePoints(num=1024))
-    path = "/home/brenda/Documents/master/thesis/IAS_2020_Brenda_dataset/dataset/"
-    #dataset = CoMA(root='{}/../dataset/'.format(cwd), pre_transform=T.NormalizeScale())
-    train_dataset = CoMA(root=path, train=True ,pre_transform=T.NormalizeScale())
-    test_dataset = CoMA(root=path, train=False, pre_transform=T.NormalizeScale())
-    print(len(train_dataset))
-    print(len(test_dataset))
+def train_predictor(args):
+    train_dataset = CoMA(root=args.dataset_dir, train=True, pre_transform=T.NormalizeScale(),
+                         transform=T.SamplePoints(args.num_sample_points))
+    test_dataset = CoMA(root=args.dataset_dir, train=False, pre_transform=T.NormalizeScale(),
+                        transform=T.SamplePoints(args.num_sample_points))
 
     print("dataset ready")
+    print("train_dataset", len(train_dataset))
+    print("test_dataset", len(test_dataset))
+
+    model = PointNet(12)
     train_dataset = convert_dataset_sizes(train_dataset, 700)
     test_dataset = convert_dataset_sizes(test_dataset, 206)
 
-    print(len(train_dataset))
-    print(len(test_dataset))
-    #drop_last=True
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, drop_last=True) #num_workers=6
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, drop_last=True)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True, drop_last=True)
     val_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True, drop_last=True)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, betas=(0.9, 0.999), eps=1e-08,
+                                 weight_decay=args.weight_decay)
+    trainer = Trainer(args.n_iters, args.trained_models_dir, args.print_every, args.plot_every)
 
-    model = PointNet(12)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, betas=(0.9, 0.999), eps=1e-08, weight_decay=args.weight_decay)
-    trainer = Trainer(args.n_iters, args.print_every, args.plot_every)
-
-    t = torch.cuda.get_device_properties(0).total_memory
-    r = torch.cuda.memory_reserved(0)
-    a = torch.cuda.memory_allocated(0)
-    f = t - (r + a)  # free inside reserved
-
-    print("total: ", t / 1e+9)
-    print("reservada: ", r / 1e+9)
-    print("allocada: ", a / 1e+9)
-    print("free: ", f / 1e+9)
-    print("---------")
-    
     if args.training:
-       trainer.train_model(train_loader, val_loader, model, optimizer, args.device)
+        trainer.train_model(train_loader, val_loader, model, optimizer, args.device)
     else:
-       path = "/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/trainer/trained_models/pointnet_model_20220612_140844"
-       model.test(path)
+        path = "{}/{}".format(args.trained_models_dir, args.trained_model)
+        model.test(path)
 
-    testing_model(test_loader, model, 12) #test_loader
+    testing_model(test_loader, model, 12)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--n-iters',
         type=int,
-        default=120,
+        default=3,
         help='Number of training steps')
     parser.add_argument(
         '--batch-size',
@@ -85,6 +62,11 @@ if __name__ == '__main__':
         default=1e-4,
         help='Weight decay for Adam optimizer')
     parser.add_argument(
+        '--num-sample-points',
+        type=int,
+        default=3159,
+        help='Number of points to sample for each face expression')
+    parser.add_argument(
         '--print-every',
         type=int,
         default=1,
@@ -92,17 +74,30 @@ if __name__ == '__main__':
     parser.add_argument(
         '--training',
         type=bool,
-        default=False,
+        default=True,
         help='Trained the model when True, test otherwise')
     parser.add_argument(
         '--plot-every',
         type=int,
         default=1,
         help='Saving frequency for loss and accuracy to be plotted')
+    parser.add_argument(
+        '--dataset-dir',
+        type=str,
+        default="/home/brenda/Documents/master/thesis/IAS_2020_Brenda_dataset/dataset/",
+        help='Path to CoMa dataset')
+    parser.add_argument(
+        '--trained-models-dir',
+        type=str,
+        default="/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/trainer/Trained_models/",
+        help='Directory where trained models are saved.')
+    parser.add_argument(
+        '--trained-model',
+        type=str,
+        default="pointnet_model_20220619_220010",
+        help='Name of the model to evaluate')
 
     args, _ = parser.parse_known_args()
-
-    print(args)
 
     cuda_availability = torch.cuda.is_available()
     print("is cuda available?", cuda_availability)
@@ -110,7 +105,5 @@ if __name__ == '__main__':
         args.device = torch.device('cuda:{}'.format(torch.cuda.current_device()))
     else:
         args.device = 'cpu'
+
     train_predictor(args)
-
-
-

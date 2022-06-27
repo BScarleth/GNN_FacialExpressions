@@ -1,19 +1,13 @@
 import torch, time
 import torch.nn.functional as F
-#from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-
 from .utils import timeSince
 from datetime import datetime
-from tqdm import tqdm
-import os
 from torch.utils.tensorboard import SummaryWriter
 
 class Trainer:
-    def __init__(self, n_iters, print_every = 10, plot_every= 10):
-        #self.plot_losses = []
-        #self.plot_acc = []
-
+    def __init__(self, n_iters, dir, print_every = 10, plot_every = 10):
         self.n_iters = n_iters
+        self.dir = dir
 
         self.print_loss_total = 0  # Reset every print_every
         self.print_acc_total = 0  # Reset every print_every
@@ -33,33 +27,26 @@ class Trainer:
 
         print(next(model.parameters()).device)
         print("\nTraining started!")
-        for iter in range(1, self.n_iters + 1):#tqdm(range(1, self.n_iters + 1), desc="Iterations..."):
+        for iter in range(1, self.n_iters + 1):
             model.train()
             epoch_loss = 0
             for batch in dataloader:
                 batch.to(device)
                 predictions = model(batch)
                 _, indices = torch.max(predictions, dim=1)
-                #mientras = self.cambio(batch.y)
-                #print(batch.y, " ", indices)
-
-                #loss = F.nll_loss(predictions, mientras) #batch.y
                 loss = F.cross_entropy(predictions, batch.y)
-                #print(loss)
                 epoch_loss += float(loss)
-                #del predictions
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
                 del loss
                 batch.to("cpu")
                 torch.cuda.empty_cache()
-            epoch_acc, epoch_val_loss = self.evaluate(val_loader, model, writer, iter,device)
+            epoch_acc, epoch_val_loss = self.evaluate(val_loader, model, device)
             self.set_metrics(epoch_loss, epoch_acc, epoch_val_loss, iter, start, dataloader, writer)
         writer.flush()
 
-        torch.save(model.state_dict(), "{}/trained_models/pointnet_model_{}".format(os.getcwd(), t))
-        #return self.plot_losses, self.plot_acc
+        torch.save(model.state_dict(), "{}/pointnet_model_{}".format(self.dir, t))
 
     def set_metrics(self, epoch_loss, epoch_acc, epoch_val_loss, iter, start, dataloader, writer):
         self.print_loss_total += (epoch_loss / len(dataloader))
@@ -82,20 +69,18 @@ class Trainer:
 
         if iter % self.plot_every == 0:
             plot_loss_avg = self.plot_loss_total / self.plot_every
-            #self.plot_losses.append(plot_loss_avg)
             self.plot_loss_total = 0
-            writer.add_scalar("Loss/train", plot_loss_avg, iter) ### ? here or outside
+            writer.add_scalar("Loss/train", plot_loss_avg, iter)
 
             plot_acc_avg = self.plot_acc_total / self.plot_every
-            #self.plot_acc.append(plot_acc_avg)
             self.plot_acc_total = 0
-            writer.add_scalar("Acc/train", plot_acc_avg, iter) ### ? here or outside
+            writer.add_scalar("Acc/train", plot_acc_avg, iter)
 
             plot_loss_val_avg = self.plot_loss_val_total / self.plot_every
             self.plot_loss_val_total = 0
             writer.add_scalar("Loss/Validation", plot_loss_val_avg, iter)
 
-    def evaluate(self, dataloader, model, writer, iter, device="cpu" ):
+    def evaluate(self, dataloader, model, device="cpu"):
         model.eval()
         correct = 0
 
@@ -105,23 +90,13 @@ class Trainer:
             with torch.no_grad():
                 predictions = model(batch)
                 _, indices = torch.max(predictions, dim=1)
-            #mientras = self.cambio(batch.y)
-            #print(indices, "---", mientras)
-
-            #loss = F.nll_loss(predictions, mientras)  # batch.y
             loss = F.cross_entropy(predictions, batch.y)
             epoch_loss += float(loss)
 
             del loss
-            correct += torch.sum(indices == batch.y) #batch.y #batch.y
+            correct += torch.sum(indices == batch.y)
             batch.to("cpu")
             torch.cuda.empty_cache()
 
         return float(correct/len(dataloader.dataset)), float((epoch_loss / len(dataloader)))
 
-    def cambio(self, lista, device = "cpu"):
-        labels = {6:0, 7:1, 8:2, 9:3, 10:4, 11:5 } #9:3, 10:4, 11:5
-        lb = []
-        for l in lista:
-            lb.append(labels[int(l)])
-        return torch.tensor(lb)#.to("cpu")

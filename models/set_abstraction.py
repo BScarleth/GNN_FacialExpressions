@@ -1,8 +1,7 @@
-from models.point_net_layer import PointNetLayer
 from torch_geometric.nn import fps, knn, radius
 import torch
 from torch.nn import Sequential, Linear, ReLU, BatchNorm1d
-from torch_geometric.nn import radius_graph, PointConv, MLP
+from torch_geometric.nn import PointConv
 from torch_geometric.nn import global_max_pool
 
 
@@ -32,7 +31,7 @@ class GlobalSetAbstraction(torch.nn.Module):
         self.mlp = set_pointnet_layers(c_in, mlp)
 
     def forward(self, h, pos, batch):
-        h = torch.cat([h, pos], dim=1) #-1 o 1
+        h = torch.cat([h, pos], dim=1)
         h = self.mlp(h)
         return global_max_pool(h, batch)
 

@@ -89,48 +89,9 @@ def plot_minimized_face_(dataset, idx, rotate = False):
     else:
         plt.show()
 
-def reduce_dataset(dataset, num_elements):
-    labels = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
-    samples = {0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: []}
-    trainig_dataset = []
-    testing_dataset = []
-
-    indx = int((num_elements * 80) / 100)
-
-
-    for d in dataset:
-        labels[int(d.y)] += 1
-        samples[int(d.y)].append(d)
-    print(labels)
-
-    for lb in labels:
-        if labels[lb] > num_elements:
-            random_samples = random.sample(samples[lb], k=num_elements)
-            trainig_dataset.extend(random_samples[:indx])
-            testing_dataset.extend(random_samples[indx:])
-
-        else:
-            trainig_dataset.extend(samples[lb][:indx])
-            testing_dataset.extend(samples[lb][indx:])
-
-    # labels = {6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
-    labels = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
-    for d in trainig_dataset:
-        labels[int(d.y)] += 1
-    print(labels)
-
-    labels = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
-    for d in testing_dataset:
-        labels[int(d.y)] += 1
-    print(labels)
-    return trainig_dataset, testing_dataset
-
 def convert_dataset_sizes(dataset, num_elements):
-    #Count number of elements in each class
     labels = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0}
     samples = {0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[], 9:[], 10:[], 11:[]}
-    #labels = {6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0} # 9: 0, 10: 0, 11: 0
-    #samples = {6: [], 7: [], 8: [], 9: [], 10: [], 11: []} # 9: [], 10: [], 11: []
 
     for d in dataset:
         labels[int(d.y)] += 1
@@ -149,44 +110,4 @@ def convert_dataset_sizes(dataset, num_elements):
         else:
             random_samples = random.sample(samples[lb], k=num_elements)
             new_dataset.extend(random_samples)
-
-    #labels = {6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
-    labels = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
-    for d in new_dataset:
-        labels[int(d.y)] += 1
-    print(labels)
-    return new_dataset
-
-def increase_dataset(dataset):
-    MAX_NUMBER_ELEMENTS = 1831
-
-    #Count number of elements in each class
-    labels = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0}
-    samples = {0:[], 1:[], 2:[], 3:[], 4:[], 5:[], 6:[], 7:[], 8:[], 9:[], 10:[], 11:[]}
-    #labels = {6:0, 8:0, 11:0}
-    #samples = {6:[], 8:[], 11:[]}
-
-    for d in dataset:
-        labels[int(d.y)] += 1
-        samples[int(d.y)].append(d)
-    print(labels)
-
-    #Identify the maximum number of elements
-    max_num_elements = max(labels.values())
-    print("Max number of elements:", max_num_elements)
-
-    #Insert elements to classes with low number of samples
-    new_dataset = list(dataset)
-    for lb in labels:
-        if labels[lb] < max_num_elements:
-            difference = max_num_elements - labels[lb]
-            random_samples = random.choices(samples[lb], k = difference)
-            new_dataset.extend(random_samples)
-
-    labels = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}
-    #labels = {6: 0, 8: 0, 11: 0}
-    for d in new_dataset:
-        labels[int(d.y)] += 1
-    print(labels)
-
     return new_dataset

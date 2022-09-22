@@ -110,8 +110,8 @@ def parse_args():
     parser = argparse.ArgumentParser('PointNet')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
     parser.add_argument('--dataset_dir', type=str, default='/home/brenda/Documents/master/thesis/IAS_2020_Brenda_dataset/dataset/', help='Dataset root')
-    parser.add_argument('--basic_path',
-                        type=str, default="/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/explain/visu",
+    parser.add_argument('--basic-path',
+                        type=str, default="/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/explain/visu/",
                         help='Directory where explanations are save.')
     parser.add_argument('--trained-models-dir',
                         type=str,
@@ -195,7 +195,7 @@ def main(args):
     return explanation
 
 def show_explanation(args):
-    cloud = o3d.io.read_point_cloud("{}/{}".format(args.basic_path, args.name_explanation))  # Read the point cloud
+    cloud = o3d.io.read_point_cloud("{}{}".format(args.basic_path, args.name_explanation))  # Read the point cloud
     o3d.visualization.draw_geometries([cloud])  # Visualize the point cloud
 
 

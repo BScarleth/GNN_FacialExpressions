@@ -87,7 +87,7 @@ class CoMA(Dataset):
             f"'{self.url}' and move it to '{self.raw_dir}'")
 
     def load_yaml(self):
-        with open(self.root+'dataset_definition.yaml', 'r') as file:
+        with open(self.root+'/dataset_definition.yaml', 'r') as file:
             try:
                 return yaml.safe_load(file)
             except yaml.YAMLError as exc:

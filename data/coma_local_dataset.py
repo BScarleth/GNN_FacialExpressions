@@ -65,12 +65,13 @@ class CoMA(Dataset):
                  pre_transform: Optional[Callable] = None,
                  pre_filter: Optional[Callable] = None):
         self.train = train
+        self.root = root
         self.path = "train" if train else "test"
         super().__init__(root, transform, pre_transform, pre_filter)
 
     @property
     def raw_file_names(self) -> str:
-        return 'COMA_data.py'
+        return 'COMA_data.zip'
 
     @property
     def processed_file_names(self):
@@ -82,11 +83,11 @@ class CoMA(Dataset):
 
     def download(self):
         raise RuntimeError(
-            f"Dataset not found. Please download 'COMA_data.py' from "
+            f"Dataset not found. Please download 'COMA_data.zip' from "
             f"'{self.url}' and move it to '{self.raw_dir}'")
 
     def load_yaml(self):
-        with open('dataset_definition.yaml', 'r') as file:
+        with open(self.root+'dataset_definition.yaml', 'r') as file:
             try:
                 return yaml.safe_load(file)
             except yaml.YAMLError as exc:

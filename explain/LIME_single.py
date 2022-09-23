@@ -77,13 +77,12 @@ def gen_pc_data(ori_data, segments, explain, label, args):
     pc = o3d.geometry.PointCloud()
     pc.points = o3d.utility.Vector3dVector(pc_colored[:, 0:3])
     pc.colors = o3d.utility.Vector3dVector(pc_colored[:, 3:6])
-    o3d.io.write_point_cloud(args.basic_path + args.name_explanation, pc)
+    o3d.io.write_point_cloud(args.project_dir + "/explain/visu/" + args.name_explanation, pc)
     print("Generate point cloud", args.name_explanation, "successful!")
 
 
 def reverse_points(points, segments, explain, start='positive', percentage=0.2):
     num_input_dims = points.shape[1]
-    basic_path = "output/"
     filename = 'reversed.ply'
     if start == 'positive':
         to_rev_list = np.argsort(explain)[-int(len(explain) * percentage):]
@@ -100,7 +99,7 @@ def reverse_points(points, segments, explain, start='positive', percentage=0.2):
             points[p] = np.zeros([num_input_dims])
     pc = o3d.geometry.PointCloud()
     pc.points = o3d.utility.Vector3dVector(points[:, 0:3])
-    o3d.io.write_point_cloud(basic_path + filename, pc)
+    o3d.io.write_point_cloud(args.project_dir +"/explain/visu/" + filename, pc)
     print("Generate point cloud", filename, "successful!")
     return points
 
@@ -109,14 +108,9 @@ def parse_args():
     '''PARAMETERS'''
     parser = argparse.ArgumentParser('PointNet')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
-    parser.add_argument('--dataset_dir', type=str, default='/home/brenda/Documents/master/thesis/IAS_2020_Brenda_dataset/dataset/', help='Dataset root')
-    parser.add_argument('--basic-path',
-                        type=str, default="/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/explain/visu/",
-                        help='Directory where explanations are save.')
-    parser.add_argument('--trained-models-dir',
-                        type=str,
-                        default="/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/trainer/Trained_models/",
-                        help='Directory where trained models are saved.')
+    parser.add_argument('--project-dir', type=str,
+                        default="/home/brenda/Documents/master/thesis/Prueba_thesis/IAS_BSGT_2022-master",
+                        help='Project root')
     parser.add_argument('--trained-model', type=str, default="pointnet_model_20220619_220010", help='Name of the model to evaluate')
     parser.add_argument('--sample-points', type=int,
                         default=3159,
@@ -142,7 +136,7 @@ def sampling(points, sample_size):
     return sampled
 
 def test(model, args):
-    test_dataset = CoMA(root=args.dataset_dir, train=False, pre_transform=T.NormalizeScale(), transform=T.SamplePoints(args.sample_points))
+    test_dataset = CoMA(root=args.project_dir+"/data/", train=False, pre_transform=T.NormalizeScale(), transform=T.SamplePoints(args.sample_points))
     t = test_dataset[args.sample:(args.sample + 1)]
     train_loader = DataLoader(t, batch_size=1, shuffle=True)
     classifier = model.eval()
@@ -170,7 +164,7 @@ def main(args):
     '''MODEL LOADING'''
     classifier = PointNet(12)
     classifier.load_state_dict(torch.load(
-        "{}/{}".format(args.trained_models_dir, args.trained_model)))
+        "{}/{}".format(args.project_dir+"/trainer/trained_models/", args.trained_model)))
     with torch.no_grad():
         points, pred, logits, true_label = test(classifier, args)
 
@@ -195,7 +189,7 @@ def main(args):
     return explanation
 
 def show_explanation(args):
-    cloud = o3d.io.read_point_cloud("{}{}".format(args.basic_path, args.name_explanation))  # Read the point cloud
+    cloud = o3d.io.read_point_cloud("{}{}".format(args.project_dir + "/explain/visu/", args.name_explanation))  # Read the point cloud
     o3d.visualization.draw_geometries([cloud])  # Visualize the point cloud
 
 

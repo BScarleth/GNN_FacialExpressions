@@ -10,9 +10,9 @@ import argparse
 
 
 def train_predictor(args):
-    train_dataset = CoMA(root=args.dataset_dir, train=True, pre_transform=T.NormalizeScale(),
+    train_dataset = CoMA(root=args.project_dir+"/data/", train=True, pre_transform=T.NormalizeScale(),
                          transform=T.SamplePoints(args.num_sample_points))
-    test_dataset = CoMA(root=args.dataset_dir, train=False, pre_transform=T.NormalizeScale(),
+    test_dataset = CoMA(root=args.project_dir+"/data/", train=False, pre_transform=T.NormalizeScale(),
                         transform=T.SamplePoints(args.num_sample_points))
 
     print("dataset ready")
@@ -28,12 +28,12 @@ def train_predictor(args):
     val_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True, drop_last=True)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, betas=(0.9, 0.999), eps=1e-08,
                                  weight_decay=args.weight_decay)
-    trainer = Trainer(args.n_iters, args.trained_models_dir, args.print_every, args.plot_every)
+    trainer = Trainer(args.n_iters, args.project_dir+"/trainer/trained_models/", args.print_every, args.plot_every)
 
     if args.training:
         trainer.train_model(train_loader, val_loader, model, optimizer, args.device)
     else:
-        path = "{}/{}".format(args.trained_models_dir, args.trained_model)
+        path = "{}/{}".format(args.project_dir+"/trainer/trained_models/", args.trained_model)
         model.test(path)
 
     testing_model(test_loader, model, 12)
@@ -82,15 +82,10 @@ if __name__ == '__main__':
         default=1,
         help='Saving frequency for loss and accuracy to be plotted')
     parser.add_argument(
-        '--dataset-dir',
+        '--project-dir',
         type=str,
-        default="/home/brenda/Documents/master/thesis/IAS_2020_Brenda_dataset/dataset/",
+        default="/home/brenda/Documents/master/thesis/Prueba_thesis/IAS_BSGT_2022-master",
         help='Path to CoMa dataset')
-    parser.add_argument(
-        '--trained-models-dir',
-        type=str,
-        default="/home/brenda/Documents/master/thesis/IAS_gutierrez_2022/trainer/Trained_models/",
-        help='Directory where trained models are saved.')
     parser.add_argument(
         '--trained-model',
         type=str,

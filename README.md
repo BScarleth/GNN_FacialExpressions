@@ -21,6 +21,8 @@ We have installed pytorch-geometric using (for pytorch 1.11.0 and cuda 13):
 
 `pip install torch-geometric`
 
+`pip install torch-cluster -f https://data.pyg.org/whl/torch-1.11.0+cu113.html`
+
 6- Install additional libraries manually or execute `pip install -r requirements.txt`
 
 
